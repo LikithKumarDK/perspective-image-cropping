@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Image Crop</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div id="background" class="o_image">
+            <img id="sample" src="bill.png" alt="bill" />
+            <span>©reactcodes blog</span>
+        </div>
+        <div class="p_image">
+            <canvas id="imageInit"></canvas>
+            <canvas id="imageResult"></canvas>
+        </div>
+    </div>
+    <div class="b_container">
+        <button id="apply">Apply</button>
+    </div>
+
+
+
+    <!-- <h4>First the topLeft corner<br>then click topRight corner<br>then click bottomRight corner</h4>
+    <canvas id="canvas" width=300 height=300></canvas><br>
+    <h4>Drag to clip a part of the image</h4>
+    <canvas id="canvas1" width=300 height=300></canvas>
+    <h4>Straightened & clipped image</h4>
+    <canvas id="canvas2" width=300 height=300></canvas> -->
+</body>
+<script type="text/javascript">
+    var canvas1a = document.createElement("canvas");
+    var ctx1a = canvas1a.getContext("2d");
+    var canvas2 = document.getElementById("canvas2");
+    var ctx2 = canvas2.getContext("2d");
+
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+    function reOffset() {
+        var BB = canvas.getBoundingClientRect();
+        offsetX = BB.left;
+        offsetY = BB.top;
+    }
+    var offsetX, offsetY;
+    reOffset();
+    window.onscroll = function (e) { reOffset(); }
+    window.onresize = function (e) { reOffset(); }
+
+    var canvas1 = document.getElementById("canvas1");
+    var ctx1 = canvas1.getContext("2d");
+    function reOffset1() {
+        var BB = canvas1.getBoundingClientRect();
+        offsetX1 = BB.left;
+        offsetY1 = BB.top;
+    }
+    var offsetX1, offsetY1;
+    reOffset1();
+    window.onscroll = function (e) { reOffset1(); }
+    window.onresize = function (e) { reOffset1(); }
+
+    var topLeft, topRight, bottomRight, bottomLeft;
+    var startX, startY, mouseX, mouseY;
+    var isDown = false;
+
+    var img = new Image();
+    img.onload = start;
+    img.src = "f3165764f564b38d0e30c5d792be09d6.jpg";
+    function start() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        //
+        $("#canvas").on('mousedown', handleMouseDown);
+    }
+
+
+    function handleMouseDown(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        //
+        mX = parseInt(e.clientX - offsetX);
+        mY = parseInt(e.clientY - offsetY);
+        //
+        if (!topLeft) {
+            topLeft = { x: mX, y: mY };
+            drawMarker(topLeft);
+        } else if (!topRight) {
+            topRight = { x: mX, y: mY };
+            drawMarker(topRight);
+        } else {
+            $("#canvas").off('mousedown', handleMouseDown);
+            //        
+            bottomRight = { x: mX, y: mY };
+            drawMarker(bottomRight);
+            //
+            var dx = topRight.x - topLeft.x;
+            var dy = topRight.y - topLeft.y;
+            var angle = Math.atan2(dy, dx);
+            var width = Math.sqrt(dx * dx + dy * dy);
+            dx = bottomRight.x - topRight.x;
+            dy = bottomRight.y - topRight.y;
+            var height = Math.sqrt(dx * dx + dy * dy);
+            //
+            canvas1a.width = canvas1.width = width;
+            canvas1a.height = canvas1.height = height;
+            ctx1a.rotate(-angle);
+            ctx1a.drawImage(img, -topLeft.x, -topLeft.y);
+            ctx1.strokeStyle = 'red';
+            ctx1.drawImage(canvas1a, 0, 0);
+            //
+            $("#canvas1").mousedown(function (e) { handleMouseDown1(e); });
+            $("#canvas1").mousemove(function (e) { handleMouseMove1(e); });
+            $("#canvas1").mouseup(function (e) { handleMouseUpOut1(e); });
+            $("#canvas1").mouseout(function (e) { handleMouseUpOut1(e); });
+        }
+    }
+
+    function handleMouseDown1(e) {
+        // tell the browser we're handling this event
+        e.preventDefault();
+        e.stopPropagation();
+        //
+        startX = parseInt(e.clientX - offsetX1);
+        startY = parseInt(e.clientY - offsetY1);
+        // set drag flag
+        isDown = true;
+    }
+
+    function handleMouseUpOut1(e) {
+        if (!isDown) { return; }
+        // tell the browser we're handling this event
+        e.preventDefault();
+        e.stopPropagation();
+        //
+        mouseX = parseInt(e.clientX - offsetX1);
+        mouseY = parseInt(e.clientY - offsetY1);
+        // clear drag flag
+        isDown = false;
+        //
+        var w = mouseX - startX;
+        var h = mouseY - startY;
+        canvas2.width = w;
+        canvas2.height = h;
+        ctx2.drawImage(canvas1a, startX, startY, w, h, 0, 0, w, h);
+    }
+
+    function handleMouseMove1(e) {
+        if (!isDown) { return; }
+        // tell the browser we're handling this event
+        e.preventDefault();
+        e.stopPropagation();
+
+        mouseX = parseInt(e.clientX - offsetX1);
+        mouseY = parseInt(e.clientY - offsetY1);
+
+        ctx1.drawImage(canvas1a, 0, 0);
+        ctx1.strokeRect(startX, startY, mouseX - startX, mouseY - startY);
+
+    }
+
+    function drawMarker(pt) {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = 'red';
+        ctx.fill();
+    }
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+<script src="./libs/qunit-2.0.1.js" type="text/javascript"></script>
+<script src="utils.js" type="text/javascript"></script>
+<script src="perspective.js" type="text/javascript"></script>
+<script src="./libs/d3.v3.min.js"></script>
+<script src="./libs/numeric-solve.min.js"></script>
+<script src="./index.js"></script> -->
+
+</html>
+
+<!-- <div class="p_image">
+    <canvas id="imageInit"></canvas>
+</div>
+<div class="b_container">
+    <button id="apply">Apply</button>
+</div>
